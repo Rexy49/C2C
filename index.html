@@ -243,6 +243,141 @@
       margin: 10px 0;
     }
     
+    /* Compact print styles */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+        font-size: 12px;
+      }
+      
+      .container {
+        max-width: 100%;
+        padding: 5px;
+      }
+      
+      .buttons, .export-buttons {
+        display: none;
+      }
+      
+      .chart-box, .results-box, .matches-section {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+      }
+      
+      .number {
+        padding: 3px 5px;
+        font-size: 11px;
+      }
+    }
+    
+    /* Print/export container */
+    .export-container {
+      background: white;
+      padding: 15px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .export-header {
+      text-align: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .export-header h1 {
+      margin: 0;
+      color: var(--text-color);
+      font-size: 1.5rem;
+    }
+    
+    .export-charts {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .export-chart {
+      flex: 1;
+      min-width: 250px;
+    }
+    
+    .export-chart-title {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--primary-color);
+    }
+    
+    .export-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+    
+    .export-cell {
+      border: 1px solid #ddd;
+      text-align: center;
+      padding: 8px 0;
+      font-weight: bold;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .export-results {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .export-result-box {
+      flex: 1;
+      min-width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    
+    .export-category {
+      margin-bottom: 10px;
+    }
+    
+    .export-category h3 {
+      margin: 0 0 5px 0;
+      font-size: 1rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 3px;
+    }
+    
+    .export-numbers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+    
+    .export-number {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      padding: 2px 5px;
+      border: 1px solid #eee;
+      border-radius: 2px;
+      flex: 0 0 calc(25% - 4px);
+    }
+    
+    .export-number.match {
+      background-color: var(--match-color);
+      color: white;
+      border-color: var(--match-color);
+    }
+    
     /* Responsive adjustments */
     @media (max-width: 768px) {
       .chart-container, .results-container {
@@ -284,6 +419,10 @@
         flex: 1 0 calc(50% - 6px);
         max-width: calc(50% - 5px);
       }
+      
+      .export-number {
+        flex: 0 0 calc(33% - 4px);
+      }
     }
   </style>
 </head>
@@ -314,6 +453,46 @@
     <div class="export-buttons" id="exportButtons" style="display: none;">
       <button onclick="exportToText()">Export as Text</button>
       <button onclick="exportToImage()">Export as Image</button>
+      <button onclick="window.print()">Print Results</button>
+    </div>
+  </div>
+
+  <!-- Hidden export template -->
+  <div id="exportTemplate" style="display: none;">
+    <div class="export-container">
+      <div class="export-header">
+        <h1>4D Box Chart Comparison Results</h1>
+        <p>Generated on <span id="exportDate"></span></p>
+      </div>
+      
+      <div class="export-charts">
+        <div class="export-chart">
+          <div class="export-chart-title">Chart 1</div>
+          <div class="export-grid" id="exportGrid1"></div>
+        </div>
+        
+        <div class="export-chart">
+          <div class="export-chart-title">Chart 2</div>
+          <div class="export-grid" id="exportGrid2"></div>
+        </div>
+      </div>
+      
+      <div class="export-results">
+        <div class="export-result-box">
+          <div class="export-chart-title">Chart 1 Results</div>
+          <div id="exportResults1"></div>
+        </div>
+        
+        <div class="export-result-box">
+          <div class="export-chart-title">Chart 2 Results</div>
+          <div id="exportResults2"></div>
+        </div>
+      </div>
+      
+      <div class="export-result-box" style="width: 100%;">
+        <div class="export-chart-title">Matching Combinations</div>
+        <div id="exportMatches"></div>
+      </div>
     </div>
   </div>
 
@@ -347,17 +526,17 @@
     // Initialize both grids with default values
     function initGrids() {
       const defaultValues1 = [
-        '', '', '', '',
-        '', '', '', '',
-        '', '', '', '',
-        '', '', '', ''
+        '7', '4', '9', '5',
+        '2', '1', '6', '3',
+        '2', '8', '5', '4',
+        '6', '6', '4', '3'
       ];
       
       const defaultValues2 = [
-        '', '', '', '',
-        '', '', '', '',
-        '', '', '', '',
-        '', '', '', ''
+        '1', '2', '3', '4',
+        '2', '3', '5', '6',
+        '3', '6', '4', '8',
+        '4', '5', '6', '7'
       ];
       
       initGrid('inputGrid1', defaultValues1);
@@ -667,6 +846,7 @@
     // Export functions
     function exportToText() {
       let textContent = '4D Box Chart Comparison Results\n\n';
+      textContent += `Generated on ${new Date().toLocaleString()}\n\n`;
       
       // Add chart 1 data
       textContent += '=== Chart 1 ===\n';
@@ -721,22 +901,37 @@
     }
     
     function exportToImage() {
-      const output = document.getElementById('output');
+      // Prepare the export template
+      const template = document.getElementById('exportTemplate');
+      const clone = template.cloneNode(true);
+      clone.style.display = 'block';
+      clone.id = 'tempExport';
       
-      // Temporarily hide export buttons for cleaner screenshot
-      const exportButtons = document.getElementById('exportButtons');
-      exportButtons.style.display = 'none';
+      // Set current date
+      clone.querySelector('#exportDate').textContent = new Date().toLocaleString();
       
-      html2canvas(output, {
-        scale: 2, // Higher scale for better quality
+      // Populate chart grids
+      populateExportGrid('inputGrid1', 'exportGrid1', clone);
+      populateExportGrid('inputGrid2', 'exportGrid2', clone);
+      
+      // Populate results
+      populateExportResults('exportResults1', currentCategories.chart1, clone);
+      populateExportResults('exportResults2', currentCategories.chart2, clone);
+      populateExportResults('exportMatches', currentCategories.matches, clone, true);
+      
+      // Add to body
+      document.body.appendChild(clone);
+      
+      // Capture as image
+      html2canvas(clone, {
+        scale: 2,
         logging: false,
-        useCORS: true,
-        allowTaint: true,
         scrollX: 0,
-        scrollY: 0
+        scrollY: 0,
+        backgroundColor: '#ffffff'
       }).then(canvas => {
-        // Show buttons again
-        exportButtons.style.display = 'flex';
+        // Remove the temporary element
+        document.body.removeChild(clone);
         
         // Create download
         const link = document.createElement('a');
@@ -744,6 +939,53 @@
         link.href = canvas.toDataURL('image/png');
         link.click();
       });
+    }
+    
+    function populateExportGrid(sourceId, targetId, container) {
+      const sourceInputs = document.querySelectorAll(`#${sourceId} input`);
+      const targetGrid = container.querySelector(`#${targetId}`);
+      targetGrid.innerHTML = '';
+      
+      for (let i = 0; i < 16; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'export-cell';
+        cell.textContent = sourceInputs[i].value;
+        targetGrid.appendChild(cell);
+      }
+    }
+    
+    function populateExportResults(targetId, categories, container, allMatches = false) {
+      const targetElement = container.querySelector(`#${targetId}`);
+      targetElement.innerHTML = '';
+      
+      for (const [category, numbers] of Object.entries(categories)) {
+        if (numbers.length === 0) continue;
+        
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'export-category';
+        
+        const title = document.createElement('h3');
+        title.textContent = `${category} (${numbers.length})`;
+        categoryDiv.appendChild(title);
+        
+        const numbersDiv = document.createElement('div');
+        numbersDiv.className = 'export-numbers';
+        
+        numbers.forEach(num => {
+          const numSpan = document.createElement('span');
+          numSpan.className = 'export-number';
+          numSpan.textContent = num;
+          
+          if (allMatches || currentCategories.matches[category].includes(num)) {
+            numSpan.classList.add('match');
+          }
+          
+          numbersDiv.appendChild(numSpan);
+        });
+        
+        categoryDiv.appendChild(numbersDiv);
+        targetElement.appendChild(categoryDiv);
+      }
     }
 
     // Initialize on load

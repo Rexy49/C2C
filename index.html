@@ -924,97 +924,115 @@
       return text;
     }
     
-     // Export to image (modified to match text layout)
     function exportToImage() {
-      // Prepare the export template
-      const template = document.getElementById('exportTemplate');
-      const clone = template.cloneNode(true);
-      clone.style.display = 'block';
-      clone.id = 'tempExport';
-      
-      // Set current date
-      clone.querySelector('#exportDate').textContent = new Date().toLocaleString();
-      
-      // Populate chart grids
-      populateExportGrid('inputGrid1', 'exportGrid1', clone);
-      populateExportGrid('inputGrid2', 'exportGrid2', clone);
-      
-      // Populate results to match text format
-      populateExportResultsTextStyle('exportResults1', currentCategories.chart1, clone);
-      populateExportResultsTextStyle('exportResults2', currentCategories.chart2, clone);
-      populateExportResultsTextStyle('exportMatches', currentCategories.matches, clone, true);
-      
-      // Add to body
-      document.body.appendChild(clone);
-      
-      // Capture as image
-      html2canvas(clone, {
-        scale: 2,
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        backgroundColor: '#ffffff'
-      }).then(canvas => {
-        // Remove the temporary element
-        document.body.removeChild(clone);
-        
-        // Create download
-        const link = document.createElement('a');
-        link.download = '4d_comparison_results.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
-    }
-    
-    function populateExportResultsTextStyle(targetId, categories, container, isMatchSection = false) {
-      const targetElement = container.querySelector(`#${targetId}`);
-      targetElement.innerHTML = '';
-      
-      for (const [category, numbers] of Object.entries(categories)) {
-        if (numbers.length === 0) continue;
-        
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'export-category';
-        
-        const title = document.createElement('h3');
-        title.textContent = `${category} (${numbers.length}):`;
-        categoryDiv.appendChild(title);
-        
-        // Format numbers in blocks of 8 per line like text export
-        const numbersPerLine = 8;
-        const lineCount = Math.ceil(numbers.length / numbersPerLine);
-        
-        for (let i = 0; i < lineCount; i++) {
-          const start = i * numbersPerLine;
-          const end = start + numbersPerLine;
-          const lineNumbers = numbers.slice(start, end);
-          
-          const lineDiv = document.createElement('div');
-          lineDiv.className = 'export-numbers-line';
-          
-          lineNumbers.forEach(num => {
-            const numSpan = document.createElement('span');
-            numSpan.className = 'export-number';
-            
-            // Highlight matches if not in match section
-            if (!isMatchSection && currentCategories.matches[category]?.includes(num)) {
-              numSpan.classList.add('match');
-            }
-            
-            numSpan.textContent = num;
-            lineDiv.appendChild(numSpan);
-            
-            // Add space between numbers
-            const space = document.createTextNode(' ');
-            lineDiv.appendChild(space);
-          });
-          
-          categoryDiv.appendChild(lineDiv);
+  // Prepare the export template clone
+  const template = document.getElementById('exportTemplate');
+  const clone = template.cloneNode(true);
+  
+  // Style the clone for off-screen rendering
+  Object.assign(clone.style, {
+    display: 'block',
+    position: 'absolute',
+    top: '-9999px',
+    left: '-9999px',
+    width: 'auto',
+    height: 'auto',
+    zIndex: '9999'
+  });
+  
+  // Set current date
+  clone.querySelector('#exportDate').textContent = new Date().toLocaleString();
+
+  // Populate the chart grids
+  populateExportGrid('inputGrid1', 'exportGrid1', clone);
+  populateExportGrid('inputGrid2', 'exportGrid2', clone);
+  
+  // Populate the results sections
+  populateExportResultsTextStyle('exportResults1', currentCategories.chart1, clone);
+  populateExportResultsTextStyle('exportResults2', currentCategories.chart2, clone);
+  populateExportResultsTextStyle('exportMatches', currentCategories.matches, clone, true);
+
+  // Append clone to DOM off-screen
+  document.body.appendChild(clone);
+
+  // Use html2canvas to capture the clone
+  html2canvas(clone, {
+    scale: 2,
+    logging: false,
+    backgroundColor: '#ffffff'
+  }).then(canvas => {
+    // Remove the clone after capture
+    document.body.removeChild(clone);
+
+    // Create download link
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = '4d_comparison_results.png';
+    link.click();
+  });
+}
+
+// Helper function to populate grids
+function populateExportGrid(originalGridId, exportGridId, cloneContainer) {
+  const originalGrid = document.getElementById(originalGridId);
+  const exportGrid = cloneContainer.querySelector(`#${exportGridId}`);
+  exportGrid.innerHTML = '';
+
+  const originalInputs = originalGrid.querySelectorAll('input');
+  originalInputs.forEach((input) => {
+    const cell = document.createElement('div');
+    cell.className = 'export-cell';
+    cell.textContent = input.value;
+    exportGrid.appendChild(cell);
+  });
+}
+
+// Helper function to populate categorized results
+function populateExportResultsTextStyle(targetId, categories, cloneContainer, isMatchSection = false) {
+  const targetElement = cloneContainer.querySelector(`#${targetId}`);
+  targetElement.innerHTML = '';
+
+  for (const [category, numbers] of Object.entries(categories)) {
+    if (numbers.length === 0) continue;
+
+    const categoryDiv = document.createElement('div');
+    categoryDiv.className = 'export-category';
+
+    const title = document.createElement('h3');
+    title.textContent = `${category} (${numbers.length}):`;
+    categoryDiv.appendChild(title);
+
+    const numbersPerLine = 8;
+    const lineCount = Math.ceil(numbers.length / numbersPerLine);
+
+    for (let i = 0; i < lineCount; i++) {
+      const start = i * numbersPerLine;
+      const end = start + numbersPerLine;
+      const lineNumbers = numbers.slice(start, end);
+
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'export-numbers-line';
+
+      lineNumbers.forEach(num => {
+        const numSpan = document.createElement('span');
+        numSpan.className = 'export-number';
+
+        // Highlight if in matches and not in match section
+        if (!isMatchSection && currentCategories.matches[category]?.includes(num)) {
+          numSpan.classList.add('match');
         }
-        
-        targetElement.appendChild(categoryDiv);
-      }
+
+        numSpan.textContent = num;
+        lineDiv.appendChild(numSpan);
+        lineDiv.appendChild(document.createTextNode(' ')); // space between numbers
+      });
+
+      categoryDiv.appendChild(lineDiv);
     }
+
+    targetElement.appendChild(categoryDiv);
+  }
+}
 
 
     // Initialize on load

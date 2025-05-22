@@ -386,14 +386,14 @@
       }
       
       .chart-box, .results-box {
-        max-width: 100%;
+        max-width: 90%;
       }
       
       .number {
         flex: 1 0 calc(33% - 6px);
         max-width: calc(33% - 5px);
         padding: 4px 6px;
-        font-size: 13px;
+        font-size: 12px;
       }
       
       .buttons, .export-buttons {
@@ -993,10 +993,10 @@ function populateExportResultsTextStyle(targetId, categories, cloneContainer, is
 
   const sectionHeaderStyle = `
     font-family: Arial, sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
     color: #0066cc;
-    margin-top: 10px;
+    margin-top: 8px;
     margin-bottom: 4px;
     border-bottom: 1px solid #ccc;
     padding-bottom: 2px;
@@ -1004,13 +1004,13 @@ function populateExportResultsTextStyle(targetId, categories, cloneContainer, is
 
   const numberBoxStyle = `
     font-family: 'Courier New', monospace;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     padding: 2px 4px;
     margin: 2px;
     border: 1px solid #ddd;
     border-radius: 3px;
-    background-color: ${isMatchSection ? '#2ecc71' : '#f0f0f0'};
+    background-color: ${isMatchSection ? '#27ae60' : '#f0f0f0'};
     color: ${isMatchSection ? 'white' : 'black'};
     display: inline-block;
     min-width: 30px;
@@ -1039,19 +1039,19 @@ function populateExportResultsTextStyle(targetId, categories, cloneContainer, is
       numDiv.style = numberBoxStyle;
       numDiv.textContent = num;
       if (isMatchSection && currentCategories.matches[category]?.includes(num)) {
-        numDiv.style.backgroundColor = '#27ae60'; // color for matches
+        numDiv.style.backgroundColor = '#27ae60'; // match color
         numDiv.style.color = 'white';
       }
       numbersContainer.appendChild(numDiv);
     });
   }
 
-  // Optional: add a footer or small note
+  // Optional footer
   const footer = document.createElement('div');
   footer.style = `
     margin-top: 8px;
     font-family: Arial, sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     color: #555;
     text-align: center;
   `;

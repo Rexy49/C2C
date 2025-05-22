@@ -923,127 +923,140 @@
       
       return text;
     }
+
+    // Add this function to populate the export grids
+function populateExportGrid(sourceGridId, targetGridId, container) {
+  const inputs = document.querySelectorAll(`#${sourceGridId} input`);
+  const targetGrid = container.querySelector(`#${targetGridId}`);
+  targetGrid.innerHTML = '';
+  
+  for (let i = 0; i < 16; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'export-cell';
+    cell.textContent = inputs[i].value;
+    targetGrid.appendChild(cell);
+  }
+}
     
-// Export to image (with better error handling)
+// Replace your existing exportToImage function with this improved version
 function exportToImage() {
   try {
-    // Prepare the export template
-    const template = document.getElementById('exportTemplate');
-    if (!template) {
-      alert('Export template not found');
-      return;
-    }
+    // Create a temporary container for export
+    const exportContainer = document.createElement('div');
+    exportContainer.style.position = 'absolute';
+    exportContainer.style.left = '-9999px';
+    exportContainer.style.top = '0';
+    exportContainer.style.width = '800px';
+    exportContainer.style.backgroundColor = '#ffffff';
+    exportContainer.style.padding = '20px';
     
-    const clone = template.cloneNode(true);
-    clone.style.display = 'block';
-    clone.id = 'tempExport';
-    clone.style.position = 'absolute';
-    clone.style.left = '-9999px';
+    // Create the export content
+    exportContainer.innerHTML = `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #2c3e50; margin: 0 0 10px 0;">4D Box Chart Comparison Results</h1>
+        <p style="color: #7f8c8d; margin: 0;">Generated on ${new Date().toLocaleString()}</p>
+      </div>
+      
+      <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+        <div style="flex: 1; margin: 0 10px;">
+          <h3 style="text-align: center; color: #3498db; margin-bottom: 10px;">Chart 1</h3>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
+            ${Array.from(document.querySelectorAll('#inputGrid1 input')).map(input => 
+              `<div style="border: 1px solid #ddd; text-align: center; padding: 10px 0; font-weight: bold;">${input.value}</div>`
+            ).join('')}
+          </div>
+        </div>
+        
+        <div style="flex: 1; margin: 0 10px;">
+          <h3 style="text-align: center; color: #3498db; margin-bottom: 10px;">Chart 2</h3>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
+            ${Array.from(document.querySelectorAll('#inputGrid2 input')).map(input => 
+              `<div style="border: 1px solid #ddd; text-align: center; padding: 10px 0; font-weight: bold;">${input.value}</div>`
+            ).join('')}
+          </div>
+        </div>
+      </div>
+      
+      <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+        <div style="flex: 1; margin: 0 10px;">
+          <h3 style="text-align: center; color: #3498db; margin-bottom: 10px;">Chart 1 Results</h3>
+          ${formatCategoriesForExport(currentCategories.chart1)}
+        </div>
+        
+        <div style="flex: 1; margin: 0 10px;">
+          <h3 style="text-align: center; color: #3498db; margin-bottom: 10px;">Chart 2 Results</h3>
+          ${formatCategoriesForExport(currentCategories.chart2)}
+        </div>
+      </div>
+      
+      <div style="margin-top: 20px;">
+        <h3 style="text-align: center; color: #3498db; margin-bottom: 10px;">Matching Combinations</h3>
+        ${formatCategoriesForExport(currentCategories.matches, true)}
+      </div>
+    `;
     
-    // Set current date
-    const dateElement = clone.querySelector('#exportDate');
-    if (dateElement) {
-      dateElement.textContent = new Date().toLocaleString();
-    }
+    document.body.appendChild(exportContainer);
     
-    // Populate chart grids
-    populateExportGrid('inputGrid1', 'exportGrid1', clone);
-    populateExportGrid('inputGrid2', 'exportGrid2', clone);
-    
-    // Populate results
-    populateExportResultsTextStyle('exportResults1', currentCategories.chart1, clone);
-    populateExportResultsTextStyle('exportResults2', currentCategories.chart2, clone);
-    populateExportResultsTextStyle('exportMatches', currentCategories.matches, clone, true);
-    
-    // Add to body
-    document.body.appendChild(clone);
-    
-    // Capture as image
-    html2canvas(clone, {
+    // Use html2canvas to capture the image
+    html2canvas(exportContainer, {
       scale: 2,
-      logging: true, // Enable logging to see errors
+      logging: false,
       scrollX: 0,
       scrollY: 0,
       backgroundColor: '#ffffff',
-      useCORS: true,
-      allowTaint: true
+      useCORS: true
     }).then(canvas => {
-      try {
-        // Create download
-        const link = document.createElement('a');
-        link.download = '4d_comparison_results.png';
-        link.href = canvas.toDataURL('image/png');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (e) {
-        console.error('Download error:', e);
-        alert('Error creating download: ' + e.message);
-      } finally {
-        // Remove the temporary element
-        if (clone.parentNode) {
-          document.body.removeChild(clone);
-        }
-      }
+      // Create download link
+      const link = document.createElement('a');
+      link.download = '4d-comparison-results.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(exportContainer);
     }).catch(err => {
-      console.error('Canvas error:', err);
-      alert('Error generating image: ' + err.message);
-      if (clone.parentNode) {
-        document.body.removeChild(clone);
-      }
+      console.error('Error generating image:', err);
+      document.body.removeChild(exportContainer);
+      alert('Error generating image. Please try again.');
     });
-  } catch (e) {
-    console.error('Export error:', e);
-    alert('Error during export: ' + e.message);
+    
+  } catch (err) {
+    console.error('Error in exportToImage:', err);
+    alert('An error occurred while exporting the image.');
   }
 }
 
-// Export to text (with better error handling)
-function exportToText() {
-  try {
-    let textContent = '===== 4D Box Chart Comparison Results =====\n';
-    textContent += `Generated on ${new Date().toLocaleString()}\n\n`;
+    // Helper function to format categories for export
+function formatCategoriesForExport(categories, isMatchSection = false) {
+  let html = '';
+  
+  for (const [category, numbers] of Object.entries(categories)) {
+    if (numbers.length === 0) continue;
     
-    // Charts section
-    textContent += '=== Charts ===\n';
-    textContent += 'Chart 1:\n';
-    textContent += getChartAsText('inputGrid1');
-    textContent += '\nChart 2:\n';
-    textContent += getChartAsText('inputGrid2');
-    
-    // Results section
-    textContent += '\n=== Results ===\n';
-    textContent += 'Chart 1 Combinations:\n';
-    textContent += formatCategoryResults(currentCategories.chart1);
-    textContent += '\nChart 2 Combinations:\n';
-    textContent += formatCategoryResults(currentCategories.chart2);
-    
-    // Matches section
-    textContent += '\n=== Matching Combinations ===\n';
-    const totalMatches = Object.values(currentCategories.matches).reduce((a, b) => a + b.length, 0);
-    textContent += `Total Matches: ${totalMatches}\n`;
-    textContent += formatCategoryResults(currentCategories.matches, true);
-    
-    // Create download
-    const blob = new Blob([textContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = '4d_comparison_results.txt';
-    document.body.appendChild(a);
-    a.click();
-    
-    // Clean up
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 100);
-    
-  } catch (e) {
-    console.error('Export error:', e);
-    alert('Error during text export: ' + e.message);
+    html += `
+      <div style="margin-bottom: 15px;">
+        <h4 style="margin: 0 0 5px 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 3px;">
+          ${category} (${numbers.length})
+        </h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+          ${numbers.map(num => {
+            const isMatch = !isMatchSection && currentCategories.matches[category]?.includes(num);
+            return `<span style="
+              font-family: 'Courier New', monospace;
+              font-size: 12px;
+              padding: 2px 5px;
+              border-radius: 3px;
+              ${isMatch ? 'background-color: #2ecc71; color: white;' : 'border: 1px solid #eee;'}
+            ">${num}</span>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
   }
+  
+  return html;
 }
+
     
     function populateExportResultsTextStyle(targetId, categories, container, isMatchSection = false) {
       const targetElement = container.querySelector(`#${targetId}`);

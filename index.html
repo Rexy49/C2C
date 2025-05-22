@@ -844,25 +844,30 @@
     }
 
     // Export functions
-    function exportToText() {
-      let textContent = '4D Box Chart Comparison Results\n\n';
+   function exportToText() {
+      // Create a text version that matches the image layout
+      let textContent = '===== 4D Box Chart Comparison Results =====\n';
       textContent += `Generated on ${new Date().toLocaleString()}\n\n`;
       
-      // Add chart 1 data
-      textContent += '=== Chart 1 ===\n';
-      textContent += getChartAsText('inputGrid1');
-      textContent += '\nCombinations:\n';
-      textContent += getCombinationsAsText(currentCategories.chart1);
+      // Add chart grids
+      textContent += '=== Charts ===\n';
+      textContent += 'Chart 1:\n';
+      textContent += getChartAsTextGrid('inputGrid1');
+      textContent += '\nChart 2:\n';
+      textContent += getChartAsTextGrid('inputGrid2');
       
-      // Add chart 2 data
-      textContent += '\n=== Chart 2 ===\n';
-      textContent += getChartAsText('inputGrid2');
-      textContent += '\nCombinations:\n';
-      textContent += getCombinationsAsText(currentCategories.chart2);
+      // Add results
+      textContent += '\n=== Results ===\n';
+      textContent += 'Chart 1 Combinations:\n';
+      textContent += getCombinationsAsTextGrid(currentCategories.chart1);
+      textContent += '\nChart 2 Combinations:\n';
+      textContent += getCombinationsAsTextGrid(currentCategories.chart2);
       
       // Add matches
       textContent += '\n=== Matching Combinations ===\n';
-      textContent += getCombinationsAsText(currentCategories.matches);
+      const totalMatches = Object.values(currentCategories.matches).reduce((a, b) => a + b.length, 0);
+      textContent += `Total Matches: ${totalMatches}\n`;
+      textContent += getCombinationsAsTextGrid(currentCategories.matches, true);
       
       // Create download
       const blob = new Blob([textContent], { type: 'text/plain' });
@@ -876,25 +881,48 @@
       URL.revokeObjectURL(url);
     }
     
-    function getChartAsText(gridId) {
+    // Format chart as a grid of numbers (4x4)
+    function getChartAsTextGrid(gridId) {
       const inputs = document.querySelectorAll(`#${gridId} input`);
       let text = '';
       
-      for (let i = 0; i < 16; i++) {
-        text += inputs[i].value + ' ';
-        if ((i + 1) % 4 === 0) text += '\n';
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 4; col++) {
+          const index = row * 4 + col;
+          text += inputs[index].value.padStart(2, ' ') + ' ';
+        }
+        text += '\n';
       }
       
       return text;
     }
     
-    function getCombinationsAsText(categories) {
+    // Format combinations in a compact grid layout
+    function getCombinationsAsTextGrid(categories, allMatches = false) {
       let text = '';
       
       for (const [category, numbers] of Object.entries(categories)) {
         if (numbers.length === 0) continue;
         
-        text += `${category} (${numbers.length}): ${numbers.join(', ')}\n`;
+        text += `${category} (${numbers.length}):\n`;
+        
+        // Calculate how many numbers per line (8 numbers per line)
+        const numbersPerLine = 8;
+        const lineCount = Math.ceil(numbers.length / numbersPerLine);
+        
+        for (let i = 0; i < lineCount; i++) {
+          const start = i * numbersPerLine;
+          const end = start + numbersPerLine;
+          const lineNumbers = numbers.slice(start, end);
+          
+          text += lineNumbers.map(num => {
+            // Highlight matches with asterisks if not in allMatches mode
+            const isMatch = !allMatches && currentCategories.matches[category].includes(num);
+            return isMatch ? `*${num}*` : num;
+          }).join(' ') + '\n';
+        }
+        
+        text += '\n';
       }
       
       return text;

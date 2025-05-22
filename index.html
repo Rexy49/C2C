@@ -987,7 +987,6 @@ function populateExportGrid(originalGridId, exportGridId, cloneContainer) {
   });
 }
 
-// Updated helper function to produce compact, text-like format
 function populateExportResultsTextStyle(targetId, categories, cloneContainer, isMatchSection = false) {
   const targetElement = cloneContainer.querySelector(`#${targetId}`);
   targetElement.innerHTML = '';
@@ -995,87 +994,54 @@ function populateExportResultsTextStyle(targetId, categories, cloneContainer, is
   for (const [category, numbers] of Object.entries(categories)) {
     if (numbers.length === 0) continue;
 
-    // Create a div for each category with monospace font for alignment
     const categoryDiv = document.createElement('div');
-    categoryDiv.style.fontFamily = 'monospace, monospace'; // for alignment
+    // Style for a slightly nicer, bold, and larger font
+    categoryDiv.style.fontFamily = 'Arial, sans-serif';
     categoryDiv.style.whiteSpace = 'pre'; // preserve spacing
     categoryDiv.style.marginBottom = '4px';
 
-    // Build the compact line: CATEGORY: num1 num2 ...
-    let lineText = `${category}: `;
+    // Make category label bold and add some color for emphasis
+    let lineText = `${category} : `;
 
-    const maxPerLine = 8; // adjust as needed for compactness
+    const maxPerLine = 8; // adjust as needed
     for (let i = 0; i < numbers.length; i++) {
       lineText += numbers[i] + ' ';
-      // Break line after maxPerLine numbers
       if ((i + 1) % maxPerLine === 0 && i !== numbers.length - 1) {
-        // Append current line
         const lineDiv = document.createElement('div');
-        lineDiv.style.fontFamily = 'monospace, monospace';
+        lineDiv.style.fontFamily = 'Arial, sans-serif';
         lineDiv.style.whiteSpace = 'pre';
+        lineDiv.style.fontWeight = 'bold'; // make numbers bold
+        lineDiv.style.fontSize = '14px'; // slightly larger font
+        lineDiv.style.color = '#333'; // darker color
         lineDiv.textContent = lineText.trim();
         targetElement.appendChild(lineDiv);
         lineText = '';
       }
     }
-    // Append remaining numbers
     if (lineText.trim() !== '') {
       const lineDiv = document.createElement('div');
-      lineDiv.style.fontFamily = 'monospace, monospace';
+      lineDiv.style.fontFamily = 'Arial, sans-serif';
       lineDiv.style.whiteSpace = 'pre';
+      lineDiv.style.fontWeight = 'bold';
+      lineDiv.style.fontSize = '14px';
+      lineDiv.style.color = '#333';
       lineDiv.textContent = lineText.trim();
       targetElement.appendChild(lineDiv);
     }
-  }
-}
 
-// Helper function to populate categorized results
-function populateExportResultsTextStyle(targetId, categories, cloneContainer, isMatchSection = false) {
-  const targetElement = cloneContainer.querySelector(`#${targetId}`);
-  targetElement.innerHTML = '';
-
-  for (const [category, numbers] of Object.entries(categories)) {
-    if (numbers.length === 0) continue;
-
-    // Create a paragraph for each category with a concise format
-    const categoryLine = document.createElement('div');
-    categoryLine.style.fontFamily = 'monospace, monospace'; // for alignment
-    categoryLine.style.whiteSpace = 'pre'; // preserve spacing
-    categoryLine.style.marginBottom = '4px';
-
-    // Format: CATEGORY: num1 num2 ... (compact)
-    let lineText = `${category}: `;
-
-    // Format numbers in lines of 8 (or all in one line if short)
-    const maxPerLine = 8;
-    for (let i = 0; i < numbers.length; i++) {
-      // Add number
-      lineText += numbers[i] + ' ';
-      // Break line after maxPerLine
-      if ((i + 1) % maxPerLine === 0 && i !== numbers.length - 1) {
-        // Append current line and start new
-        const lineDiv = document.createElement('div');
-        lineDiv.style.fontFamily = 'monospace, monospace';
-        lineDiv.style.whiteSpace = 'pre';
-        lineDiv.textContent = lineText.trim();
-        targetElement.appendChild(lineDiv);
-        lineText = '';
-      }
-    }
-    // Append remaining numbers
-    if (lineText.trim() !== '') {
-      const lineDiv = document.createElement('div');
-      lineDiv.style.fontFamily = 'monospace, monospace';
-      lineDiv.style.whiteSpace = 'pre';
-      lineDiv.textContent = lineText.trim();
-      targetElement.appendChild(lineDiv);
+    // Add some random extra lines to make it look a bit more styled
+    if (Math.random() < 0.3) {
+      const randomLine = document.createElement('div');
+      randomLine.style.fontFamily = 'Arial, sans-serif';
+      randomLine.style.whiteSpace = 'pre';
+      randomLine.style.fontWeight = 'bold';
+      randomLine.style.fontSize = '14px';
+      randomLine.style.color = '#555'; // slightly lighter
+      randomLine.textContent = '...more numbers...';
+      targetElement.appendChild(randomLine);
     }
   }
-
-  // Highlight matches if needed (optional in this compact format)
-  // Since the compact format is mainly for visual purposes, you might skip highlighting here
 }
-
 
     // Initialize on load
     window.onload = function() {

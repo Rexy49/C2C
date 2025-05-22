@@ -843,71 +843,30 @@
       validateInputs();
     }
 
-    // Export functions
 // Export functions
     function exportToText() {
-      // Create a text version that visually matches the image export
-      let textContent = '';
-      
-      // Header
-      textContent += '╔════════════════════════════════════════════╗\n';
-      textContent += '║      4D BOX CHART COMPARISON RESULTS       ║\n';
-      textContent += '╟────────────────────────────────────────────╢\n';
-      textContent += `║ Generated on ${formatExportDate()}           ║\n`;
-      textContent += '╚════════════════════════════════════════════╝\n\n';
+      let textContent = '===== 4D Box Chart Comparison Results =====\n';
+      textContent += `Generated on ${new Date().toLocaleString()}\n\n`;
       
       // Charts section
-      textContent += '┌───────────────────────┬───────────────────────┐\n';
-      textContent += '│        CHART 1        │        CHART 2        │\n';
-      textContent += '├───────────────────────┼───────────────────────┤\n';
-      
-      // Add both charts side by side
-      const chart1Lines = getChartAsTextArt('inputGrid1').split('\n');
-      const chart2Lines = getChartAsTextArt('inputGrid2').split('\n');
-      
-      for (let i = 0; i < chart1Lines.length; i++) {
-        textContent += `│ ${chart1Lines[i].padEnd(21)} │ ${chart2Lines[i].padEnd(21)} │\n`;
-      }
-      
-      textContent += '└───────────────────────┴───────────────────────┘\n\n';
+      textContent += '=== Charts ===\n';
+      textContent += 'Chart 1:\n';
+      textContent += getChartAsText('inputGrid1');
+      textContent += '\nChart 2:\n';
+      textContent += getChartAsText('inputGrid2');
       
       // Results section
-      textContent += '┌────────────────────────────────────────────┐\n';
-      textContent += '│                 RESULTS                    │\n';
-      textContent += '├───────────────────────┬───────────────────────┤\n';
-      textContent += '│      CHART 1         │      CHART 2         │\n';
-      textContent += '├───────────────────────┼───────────────────────┤\n';
-      
-      // Add results side by side
-      const results1 = getResultsAsTextArt(currentCategories.chart1).split('\n');
-      const results2 = getResultsAsTextArt(currentCategories.chart2).split('\n');
-      const maxLines = Math.max(results1.length, results2.length);
-      
-      for (let i = 0; i < maxLines; i++) {
-        const line1 = i < results1.length ? results1[i] : '';
-        const line2 = i < results2.length ? results2[i] : '';
-        textContent += `│ ${line1.padEnd(21)} │ ${line2.padEnd(21)} │\n`;
-      }
-      
-      textContent += '└───────────────────────┴───────────────────────┘\n\n';
+      textContent += '\n=== Results ===\n';
+      textContent += 'Chart 1 Combinations:\n';
+      textContent += formatCategoryResults(currentCategories.chart1);
+      textContent += '\nChart 2 Combinations:\n';
+      textContent += formatCategoryResults(currentCategories.chart2);
       
       // Matches section
-      textContent += '┌────────────────────────────────────────────┐\n';
-      textContent += '│           MATCHING COMBINATIONS           │\n';
-      textContent += '├────────────────────────────────────────────┤\n';
-      
+      textContent += '\n=== Matching Combinations ===\n';
       const totalMatches = Object.values(currentCategories.matches).reduce((a, b) => a + b.length, 0);
-      textContent += `│ Total Matches: ${totalMatches.toString().padEnd(30)} │\n`;
-      textContent += '├────────────────────────────────────────────┤\n';
-      
-      const matches = getResultsAsTextArt(currentCategories.matches, true).split('\n');
-      matches.forEach(line => {
-        if (line.trim()) {
-          textContent += `│ ${line.padEnd(42)} │\n`;
-        }
-      });
-      
-      textContent += '└────────────────────────────────────────────┘\n';
+      textContent += `Total Matches: ${totalMatches}\n`;
+      textContent += formatCategoryResults(currentCategories.matches, true);
       
       // Create download
       const blob = new Blob([textContent], { type: 'text/plain' });
@@ -921,78 +880,19 @@
       URL.revokeObjectURL(url);
     }
     
-    function formatExportDate() {
-      const now = new Date();
-      return now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
-    }
-    
-    // Format chart as ASCII art grid
-    function getChartAsTextArt(gridId) {
+    function getChartAsText(gridId) {
       const inputs = document.querySelectorAll(`#${gridId} input`);
       let text = '';
       
-      text += '┌───┬───┬───┬───┐\n';
-      
-      for (let row = 0; row < 4; row++) {
-        text += '│';
-        for (let col = 0; col < 4; col++) {
-          const index = row * 4 + col;
-          text += ` ${inputs[index].value} │`;
-        }
-        text += '\n';
-        if (row < 3) text += '├───┼───┼───┼───┤\n';
+      for (let i = 0; i < 16; i++) {
+        text += inputs[i].value + ' ';
+        if ((i + 1) % 4 === 0) text += '\n';
       }
-      
-      text += '└───┴───┴───┴───┘';
-      return text;
-    }
-    
-    // Format results as ASCII art blocks
-    function getResultsAsTextArt(categories, isMatchSection = false) {
-      let text = '';
-      const maxWidth = isMatchSection ? 40 : 20;
-      
-      for (const [category, numbers] of Object.entries(categories)) {
-        if (numbers.length === 0) continue;
-        
-        const title = `${category} (${numbers.length})`;
-        text += `${title}\n`;
-        text += '┌' + '─'.repeat(maxWidth) + '┐\n';
-        
-        // Calculate how many numbers per line based on available width
-        const numbersPerLine = isMatchSection ? 6 : 4;
-        const lineCount = Math.ceil(numbers.length / numbersPerLine);
-        
-        for (let i = 0; i < lineCount; i++) {
-          const start = i * numbersPerLine;
-          const end = start + numbersPerLine;
-          const lineNumbers = numbers.slice(start, end);
-          
-          let line = '│';
-          lineNumbers.forEach(num => {
-            line += ` ${num} │`;
-          });
-          
-          // Pad the line if it's not full
-          if (lineNumbers.length < numbersPerLine) {
-            const missing = numbersPerLine - lineNumbers.length;
-            line += '   │'.repeat(missing);
-          }
-          
-          text += line + '\n';
-        }
-        
-        text += '└' + '─'.repeat(maxWidth) + '┘\n';
-      }
-      
-      return text.trim();
-    }
       
       return text;
     }
     
-    // Format combinations in a compact grid layout
-    function getCombinationsAsTextGrid(categories, allMatches = false) {
+    function formatCategoryResults(categories, isMatchSection = false) {
       let text = '';
       
       for (const [category, numbers] of Object.entries(categories)) {
@@ -1000,7 +900,7 @@
         
         text += `${category} (${numbers.length}):\n`;
         
-        // Calculate how many numbers per line (8 numbers per line)
+        // Format numbers in blocks of 8 per line
         const numbersPerLine = 8;
         const lineCount = Math.ceil(numbers.length / numbersPerLine);
         
@@ -1009,11 +909,13 @@
           const end = start + numbersPerLine;
           const lineNumbers = numbers.slice(start, end);
           
-          text += lineNumbers.map(num => {
-            // Highlight matches with asterisks if not in allMatches mode
-            const isMatch = !allMatches && currentCategories.matches[category].includes(num);
+          // Highlight matches with asterisks if not in match section
+          const formattedNumbers = lineNumbers.map(num => {
+            const isMatch = !isMatchSection && currentCategories.matches[category]?.includes(num);
             return isMatch ? `*${num}*` : num;
-          }).join(' ') + '\n';
+          });
+          
+          text += formattedNumbers.join(' ') + '\n';
         }
         
         text += '\n';
@@ -1022,6 +924,7 @@
       return text;
     }
     
+     // Export to image (modified to match text layout)
     function exportToImage() {
       // Prepare the export template
       const template = document.getElementById('exportTemplate');
@@ -1036,10 +939,10 @@
       populateExportGrid('inputGrid1', 'exportGrid1', clone);
       populateExportGrid('inputGrid2', 'exportGrid2', clone);
       
-      // Populate results
-      populateExportResults('exportResults1', currentCategories.chart1, clone);
-      populateExportResults('exportResults2', currentCategories.chart2, clone);
-      populateExportResults('exportMatches', currentCategories.matches, clone, true);
+      // Populate results to match text format
+      populateExportResultsTextStyle('exportResults1', currentCategories.chart1, clone);
+      populateExportResultsTextStyle('exportResults2', currentCategories.chart2, clone);
+      populateExportResultsTextStyle('exportMatches', currentCategories.matches, clone, true);
       
       // Add to body
       document.body.appendChild(clone);
@@ -1063,20 +966,7 @@
       });
     }
     
-    function populateExportGrid(sourceId, targetId, container) {
-      const sourceInputs = document.querySelectorAll(`#${sourceId} input`);
-      const targetGrid = container.querySelector(`#${targetId}`);
-      targetGrid.innerHTML = '';
-      
-      for (let i = 0; i < 16; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'export-cell';
-        cell.textContent = sourceInputs[i].value;
-        targetGrid.appendChild(cell);
-      }
-    }
-    
-    function populateExportResults(targetId, categories, container, allMatches = false) {
+    function populateExportResultsTextStyle(targetId, categories, container, isMatchSection = false) {
       const targetElement = container.querySelector(`#${targetId}`);
       targetElement.innerHTML = '';
       
@@ -1087,28 +977,45 @@
         categoryDiv.className = 'export-category';
         
         const title = document.createElement('h3');
-        title.textContent = `${category} (${numbers.length})`;
+        title.textContent = `${category} (${numbers.length}):`;
         categoryDiv.appendChild(title);
         
-        const numbersDiv = document.createElement('div');
-        numbersDiv.className = 'export-numbers';
+        // Format numbers in blocks of 8 per line like text export
+        const numbersPerLine = 8;
+        const lineCount = Math.ceil(numbers.length / numbersPerLine);
         
-        numbers.forEach(num => {
-          const numSpan = document.createElement('span');
-          numSpan.className = 'export-number';
-          numSpan.textContent = num;
+        for (let i = 0; i < lineCount; i++) {
+          const start = i * numbersPerLine;
+          const end = start + numbersPerLine;
+          const lineNumbers = numbers.slice(start, end);
           
-          if (allMatches || currentCategories.matches[category].includes(num)) {
-            numSpan.classList.add('match');
-          }
+          const lineDiv = document.createElement('div');
+          lineDiv.className = 'export-numbers-line';
           
-          numbersDiv.appendChild(numSpan);
-        });
+          lineNumbers.forEach(num => {
+            const numSpan = document.createElement('span');
+            numSpan.className = 'export-number';
+            
+            // Highlight matches if not in match section
+            if (!isMatchSection && currentCategories.matches[category]?.includes(num)) {
+              numSpan.classList.add('match');
+            }
+            
+            numSpan.textContent = num;
+            lineDiv.appendChild(numSpan);
+            
+            // Add space between numbers
+            const space = document.createTextNode(' ');
+            lineDiv.appendChild(space);
+          });
+          
+          categoryDiv.appendChild(lineDiv);
+        }
         
-        categoryDiv.appendChild(numbersDiv);
         targetElement.appendChild(categoryDiv);
       }
     }
+
 
     // Initialize on load
     window.onload = function() {

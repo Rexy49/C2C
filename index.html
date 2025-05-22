@@ -995,49 +995,63 @@ function populateExportResultsTextStyle(targetId, categories, cloneContainer, is
     if (numbers.length === 0) continue;
 
     const categoryDiv = document.createElement('div');
-    // Style for a slightly nicer, bold, and larger font
+    // Style the container for background shading
     categoryDiv.style.fontFamily = 'Arial, sans-serif';
-    categoryDiv.style.whiteSpace = 'pre'; // preserve spacing
-    categoryDiv.style.marginBottom = '4px';
+    categoryDiv.style.whiteSpace = 'pre';
+    categoryDiv.style.marginBottom = '8px';
+    categoryDiv.style.backgroundColor = '#e0f7fa'; // light cyan background
+    categoryDiv.style.padding = '8px';
+    categoryDiv.style.borderRadius = '6px';
 
-    // Make category label bold and add some color for emphasis
-    let lineText = `${category} : `;
+    // Add icon before category
+    let lineText = `🔖 ${category} : `;
 
     const maxPerLine = 8; // adjust as needed
     for (let i = 0; i < numbers.length; i++) {
-      lineText += numbers[i] + ' ';
+      // Add icon before each number
+      lineText += `🔢 ${numbers[i]} `;
       if ((i + 1) % maxPerLine === 0 && i !== numbers.length - 1) {
         const lineDiv = document.createElement('div');
         lineDiv.style.fontFamily = 'Arial, sans-serif';
         lineDiv.style.whiteSpace = 'pre';
-        lineDiv.style.fontWeight = 'bold'; // make numbers bold
-        lineDiv.style.fontSize = '14px'; // slightly larger font
-        lineDiv.style.color = '#333'; // darker color
+        lineDiv.style.fontWeight = 'bold';
+        lineDiv.style.fontSize = '16px'; // bigger font
+        lineDiv.style.color = '#2e7d32'; // dark green
+        lineDiv.style.backgroundColor = '#f1f8e9'; // light green background
+        lineDiv.style.padding = '4px';
+        lineDiv.style.borderRadius = '4px';
         lineDiv.textContent = lineText.trim();
         targetElement.appendChild(lineDiv);
         lineText = '';
       }
     }
+
     if (lineText.trim() !== '') {
       const lineDiv = document.createElement('div');
       lineDiv.style.fontFamily = 'Arial, sans-serif';
       lineDiv.style.whiteSpace = 'pre';
       lineDiv.style.fontWeight = 'bold';
-      lineDiv.style.fontSize = '14px';
-      lineDiv.style.color = '#333';
+      lineDiv.style.fontSize = '16px';
+      lineDiv.style.color = '#2e7d32';
+      lineDiv.style.backgroundColor = '#f1f8e9';
+      lineDiv.style.padding = '4px';
+      lineDiv.style.borderRadius = '4px';
       lineDiv.textContent = lineText.trim();
       targetElement.appendChild(lineDiv);
     }
 
-    // Add some random extra lines to make it look a bit more styled
+    // Optional: add decorative icons or symbols
     if (Math.random() < 0.3) {
       const randomLine = document.createElement('div');
       randomLine.style.fontFamily = 'Arial, sans-serif';
       randomLine.style.whiteSpace = 'pre';
       randomLine.style.fontWeight = 'bold';
       randomLine.style.fontSize = '14px';
-      randomLine.style.color = '#555'; // slightly lighter
-      randomLine.textContent = '...more numbers...';
+      randomLine.style.color = '#555';
+      randomLine.style.backgroundColor = '#fff3e0'; // light orange
+      randomLine.style.padding = '4px';
+      randomLine.style.borderRadius = '4px';
+      randomLine.textContent = '✨ More numbers... ✨';
       targetElement.appendChild(randomLine);
     }
   }

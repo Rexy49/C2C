@@ -924,47 +924,126 @@
       return text;
     }
     
-     // Export to image (modified to match text layout)
-    function exportToImage() {
-      // Prepare the export template
-      const template = document.getElementById('exportTemplate');
-      const clone = template.cloneNode(true);
-      clone.style.display = 'block';
-      clone.id = 'tempExport';
-      
-      // Set current date
-      clone.querySelector('#exportDate').textContent = new Date().toLocaleString();
-      
-      // Populate chart grids
-      populateExportGrid('inputGrid1', 'exportGrid1', clone);
-      populateExportGrid('inputGrid2', 'exportGrid2', clone);
-      
-      // Populate results to match text format
-      populateExportResultsTextStyle('exportResults1', currentCategories.chart1, clone);
-      populateExportResultsTextStyle('exportResults2', currentCategories.chart2, clone);
-      populateExportResultsTextStyle('exportMatches', currentCategories.matches, clone, true);
-      
-      // Add to body
-      document.body.appendChild(clone);
-      
-      // Capture as image
-      html2canvas(clone, {
-        scale: 2,
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        backgroundColor: '#ffffff'
-      }).then(canvas => {
-        // Remove the temporary element
-        document.body.removeChild(clone);
-        
+// Export to image (with better error handling)
+function exportToImage() {
+  try {
+    // Prepare the export template
+    const template = document.getElementById('exportTemplate');
+    if (!template) {
+      alert('Export template not found');
+      return;
+    }
+    
+    const clone = template.cloneNode(true);
+    clone.style.display = 'block';
+    clone.id = 'tempExport';
+    clone.style.position = 'absolute';
+    clone.style.left = '-9999px';
+    
+    // Set current date
+    const dateElement = clone.querySelector('#exportDate');
+    if (dateElement) {
+      dateElement.textContent = new Date().toLocaleString();
+    }
+    
+    // Populate chart grids
+    populateExportGrid('inputGrid1', 'exportGrid1', clone);
+    populateExportGrid('inputGrid2', 'exportGrid2', clone);
+    
+    // Populate results
+    populateExportResultsTextStyle('exportResults1', currentCategories.chart1, clone);
+    populateExportResultsTextStyle('exportResults2', currentCategories.chart2, clone);
+    populateExportResultsTextStyle('exportMatches', currentCategories.matches, clone, true);
+    
+    // Add to body
+    document.body.appendChild(clone);
+    
+    // Capture as image
+    html2canvas(clone, {
+      scale: 2,
+      logging: true, // Enable logging to see errors
+      scrollX: 0,
+      scrollY: 0,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      allowTaint: true
+    }).then(canvas => {
+      try {
         // Create download
         const link = document.createElement('a');
         link.download = '4d_comparison_results.png';
         link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
         link.click();
-      });
-    }
+        document.body.removeChild(link);
+      } catch (e) {
+        console.error('Download error:', e);
+        alert('Error creating download: ' + e.message);
+      } finally {
+        // Remove the temporary element
+        if (clone.parentNode) {
+          document.body.removeChild(clone);
+        }
+      }
+    }).catch(err => {
+      console.error('Canvas error:', err);
+      alert('Error generating image: ' + err.message);
+      if (clone.parentNode) {
+        document.body.removeChild(clone);
+      }
+    });
+  } catch (e) {
+    console.error('Export error:', e);
+    alert('Error during export: ' + e.message);
+  }
+}
+
+// Export to text (with better error handling)
+function exportToText() {
+  try {
+    let textContent = '===== 4D Box Chart Comparison Results =====\n';
+    textContent += `Generated on ${new Date().toLocaleString()}\n\n`;
+    
+    // Charts section
+    textContent += '=== Charts ===\n';
+    textContent += 'Chart 1:\n';
+    textContent += getChartAsText('inputGrid1');
+    textContent += '\nChart 2:\n';
+    textContent += getChartAsText('inputGrid2');
+    
+    // Results section
+    textContent += '\n=== Results ===\n';
+    textContent += 'Chart 1 Combinations:\n';
+    textContent += formatCategoryResults(currentCategories.chart1);
+    textContent += '\nChart 2 Combinations:\n';
+    textContent += formatCategoryResults(currentCategories.chart2);
+    
+    // Matches section
+    textContent += '\n=== Matching Combinations ===\n';
+    const totalMatches = Object.values(currentCategories.matches).reduce((a, b) => a + b.length, 0);
+    textContent += `Total Matches: ${totalMatches}\n`;
+    textContent += formatCategoryResults(currentCategories.matches, true);
+    
+    // Create download
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '4d_comparison_results.txt';
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+    
+  } catch (e) {
+    console.error('Export error:', e);
+    alert('Error during text export: ' + e.message);
+  }
+}
     
     function populateExportResultsTextStyle(targetId, categories, container, isMatchSection = false) {
       const targetElement = container.querySelector(`#${targetId}`);

@@ -924,7 +924,7 @@
       return text;
     }
     
-    function exportToImage() {
+function exportToImage() {
   // Prepare the export template clone
   const template = document.getElementById('exportTemplate');
   const clone = template.cloneNode(true);
@@ -947,7 +947,7 @@
   populateExportGrid('inputGrid1', 'exportGrid1', clone);
   populateExportGrid('inputGrid2', 'exportGrid2', clone);
   
-  // Populate the results sections
+  // Populate the results sections with compact format
   populateExportResultsTextStyle('exportResults1', currentCategories.chart1, clone);
   populateExportResultsTextStyle('exportResults2', currentCategories.chart2, clone);
   populateExportResultsTextStyle('exportMatches', currentCategories.matches, clone, true);
@@ -985,6 +985,48 @@ function populateExportGrid(originalGridId, exportGridId, cloneContainer) {
     cell.textContent = input.value;
     exportGrid.appendChild(cell);
   });
+}
+
+// Updated helper function to produce compact, text-like format
+function populateExportResultsTextStyle(targetId, categories, cloneContainer, isMatchSection = false) {
+  const targetElement = cloneContainer.querySelector(`#${targetId}`);
+  targetElement.innerHTML = '';
+
+  for (const [category, numbers] of Object.entries(categories)) {
+    if (numbers.length === 0) continue;
+
+    // Create a div for each category with monospace font for alignment
+    const categoryDiv = document.createElement('div');
+    categoryDiv.style.fontFamily = 'monospace, monospace'; // for alignment
+    categoryDiv.style.whiteSpace = 'pre'; // preserve spacing
+    categoryDiv.style.marginBottom = '4px';
+
+    // Build the compact line: CATEGORY: num1 num2 ...
+    let lineText = `${category}: `;
+
+    const maxPerLine = 8; // adjust as needed for compactness
+    for (let i = 0; i < numbers.length; i++) {
+      lineText += numbers[i] + ' ';
+      // Break line after maxPerLine numbers
+      if ((i + 1) % maxPerLine === 0 && i !== numbers.length - 1) {
+        // Append current line
+        const lineDiv = document.createElement('div');
+        lineDiv.style.fontFamily = 'monospace, monospace';
+        lineDiv.style.whiteSpace = 'pre';
+        lineDiv.textContent = lineText.trim();
+        targetElement.appendChild(lineDiv);
+        lineText = '';
+      }
+    }
+    // Append remaining numbers
+    if (lineText.trim() !== '') {
+      const lineDiv = document.createElement('div');
+      lineDiv.style.fontFamily = 'monospace, monospace';
+      lineDiv.style.whiteSpace = 'pre';
+      lineDiv.textContent = lineText.trim();
+      targetElement.appendChild(lineDiv);
+    }
+  }
 }
 
 // Helper function to populate categorized results

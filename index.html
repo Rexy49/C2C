@@ -1015,7 +1015,28 @@
         targetElement.appendChild(categoryDiv);
       }
     }
-
+</script>
+ <style>
+    /* Add these styles to your existing CSS */
+    .export-numbers-line {
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        margin-bottom: 5px;
+        white-space: pre;
+    }
+    
+    .export-number {
+        display: inline-block;
+        padding: 2px;
+    }
+    
+    .export-number.match {
+        background-color: var(--match-color);
+        color: white;
+        border-radius: 3px;
+        padding: 2px 4px;
+    }
+</style> 
 
     // Initialize on load
     window.onload = function() {

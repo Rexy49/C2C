@@ -991,64 +991,67 @@ function populateExportResultsTextStyle(targetId, categories, cloneContainer, is
   const targetElement = cloneContainer.querySelector(`#${targetId}`);
   targetElement.innerHTML = '';
 
-  // Common style for all lines
-  const lineStyle = `
+  const sectionHeaderStyle = `
     font-family: Arial, sans-serif;
     font-size: 14px;
     font-weight: bold;
-    color: #333;
-    padding: 4px 8px;
-    background-color: #f9f9f9;
+    color: #0066cc;
+    margin-top: 10px;
     margin-bottom: 4px;
-    border-radius: 4px;
-    display: inline-block;
-    min-width: 80px;
-    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 2px;
   `;
 
-  // Style for section headers
-  const headerStyle = `
-    font-family: Arial, sans-serif;
-    font-size: 16px;
+  const numberBoxStyle = `
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
     font-weight: bold;
-    color: #0066cc;
-    margin-top: 16px;
-    margin-bottom: 8px;
-    border-bottom: 2px solid #0066cc;
-    padding-bottom: 4px;
+    padding: 2px 4px;
+    margin: 2px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background-color: ${isMatchSection ? '#2ecc71' : '#f0f0f0'};
+    color: ${isMatchSection ? 'white' : 'black'};
+    display: inline-block;
+    min-width: 30px;
+    text-align: center;
   `;
 
   for (const [category, numbers] of Object.entries(categories)) {
     if (numbers.length === 0) continue;
 
-    // Add section header for each category
+    // Header for each category
     const headerDiv = document.createElement('div');
-    headerDiv.style = headerStyle;
-    headerDiv.textContent = category;
+    headerDiv.style = sectionHeaderStyle;
+    headerDiv.textContent = `${category} (${numbers.length})`;
     targetElement.appendChild(headerDiv);
 
-    // Create a container for the numbers
+    // Container for numbers
     const numbersContainer = document.createElement('div');
     numbersContainer.style.display = 'flex';
     numbersContainer.style.flexWrap = 'wrap';
-    numbersContainer.style.gap = '4px'; // space between items
+    numbersContainer.style.gap = '4px';
     targetElement.appendChild(numbersContainer);
 
-    // Add each number as a styled box
+    // Add numbers as small boxes
     numbers.forEach(num => {
       const numDiv = document.createElement('div');
-      numDiv.style = lineStyle;
+      numDiv.style = numberBoxStyle;
       numDiv.textContent = num;
+      if (isMatchSection && currentCategories.matches[category]?.includes(num)) {
+        numDiv.style.backgroundColor = '#27ae60'; // color for matches
+        numDiv.style.color = 'white';
+      }
       numbersContainer.appendChild(numDiv);
     });
   }
 
-  // Optional: add a footer or "more numbers" message
+  // Optional: add a footer or small note
   const footer = document.createElement('div');
   footer.style = `
-    margin-top: 20px;
+    margin-top: 8px;
     font-family: Arial, sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     color: #555;
     text-align: center;
   `;

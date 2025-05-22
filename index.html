@@ -844,30 +844,70 @@
     }
 
     // Export functions
-   function exportToText() {
-      // Create a text version that matches the image layout
-      let textContent = '===== 4D Box Chart Comparison Results =====\n';
-      textContent += `Generated on ${new Date().toLocaleString()}\n\n`;
+// Export functions
+    function exportToText() {
+      // Create a text version that visually matches the image export
+      let textContent = '';
       
-      // Add chart grids
-      textContent += '=== Charts ===\n';
-      textContent += 'Chart 1:\n';
-      textContent += getChartAsTextGrid('inputGrid1');
-      textContent += '\nChart 2:\n';
-      textContent += getChartAsTextGrid('inputGrid2');
+      // Header
+      textContent += '╔════════════════════════════════════════════╗\n';
+      textContent += '║      4D BOX CHART COMPARISON RESULTS       ║\n';
+      textContent += '╟────────────────────────────────────────────╢\n';
+      textContent += `║ Generated on ${formatExportDate()}           ║\n`;
+      textContent += '╚════════════════════════════════════════════╝\n\n';
       
-      // Add results
-      textContent += '\n=== Results ===\n';
-      textContent += 'Chart 1 Combinations:\n';
-      textContent += getCombinationsAsTextGrid(currentCategories.chart1);
-      textContent += '\nChart 2 Combinations:\n';
-      textContent += getCombinationsAsTextGrid(currentCategories.chart2);
+      // Charts section
+      textContent += '┌───────────────────────┬───────────────────────┐\n';
+      textContent += '│        CHART 1        │        CHART 2        │\n';
+      textContent += '├───────────────────────┼───────────────────────┤\n';
       
-      // Add matches
-      textContent += '\n=== Matching Combinations ===\n';
+      // Add both charts side by side
+      const chart1Lines = getChartAsTextArt('inputGrid1').split('\n');
+      const chart2Lines = getChartAsTextArt('inputGrid2').split('\n');
+      
+      for (let i = 0; i < chart1Lines.length; i++) {
+        textContent += `│ ${chart1Lines[i].padEnd(21)} │ ${chart2Lines[i].padEnd(21)} │\n`;
+      }
+      
+      textContent += '└───────────────────────┴───────────────────────┘\n\n';
+      
+      // Results section
+      textContent += '┌────────────────────────────────────────────┐\n';
+      textContent += '│                 RESULTS                    │\n';
+      textContent += '├───────────────────────┬───────────────────────┤\n';
+      textContent += '│      CHART 1         │      CHART 2         │\n';
+      textContent += '├───────────────────────┼───────────────────────┤\n';
+      
+      // Add results side by side
+      const results1 = getResultsAsTextArt(currentCategories.chart1).split('\n');
+      const results2 = getResultsAsTextArt(currentCategories.chart2).split('\n');
+      const maxLines = Math.max(results1.length, results2.length);
+      
+      for (let i = 0; i < maxLines; i++) {
+        const line1 = i < results1.length ? results1[i] : '';
+        const line2 = i < results2.length ? results2[i] : '';
+        textContent += `│ ${line1.padEnd(21)} │ ${line2.padEnd(21)} │\n`;
+      }
+      
+      textContent += '└───────────────────────┴───────────────────────┘\n\n';
+      
+      // Matches section
+      textContent += '┌────────────────────────────────────────────┐\n';
+      textContent += '│           MATCHING COMBINATIONS           │\n';
+      textContent += '├────────────────────────────────────────────┤\n';
+      
       const totalMatches = Object.values(currentCategories.matches).reduce((a, b) => a + b.length, 0);
-      textContent += `Total Matches: ${totalMatches}\n`;
-      textContent += getCombinationsAsTextGrid(currentCategories.matches, true);
+      textContent += `│ Total Matches: ${totalMatches.toString().padEnd(30)} │\n`;
+      textContent += '├────────────────────────────────────────────┤\n';
+      
+      const matches = getResultsAsTextArt(currentCategories.matches, true).split('\n');
+      matches.forEach(line => {
+        if (line.trim()) {
+          textContent += `│ ${line.padEnd(42)} │\n`;
+        }
+      });
+      
+      textContent += '└────────────────────────────────────────────┘\n';
       
       // Create download
       const blob = new Blob([textContent], { type: 'text/plain' });
@@ -881,18 +921,72 @@
       URL.revokeObjectURL(url);
     }
     
-    // Format chart as a grid of numbers (4x4)
-    function getChartAsTextGrid(gridId) {
+    function formatExportDate() {
+      const now = new Date();
+      return now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+    }
+    
+    // Format chart as ASCII art grid
+    function getChartAsTextArt(gridId) {
       const inputs = document.querySelectorAll(`#${gridId} input`);
       let text = '';
       
+      text += '┌───┬───┬───┬───┐\n';
+      
       for (let row = 0; row < 4; row++) {
+        text += '│';
         for (let col = 0; col < 4; col++) {
           const index = row * 4 + col;
-          text += inputs[index].value.padStart(2, ' ') + ' ';
+          text += ` ${inputs[index].value} │`;
         }
         text += '\n';
+        if (row < 3) text += '├───┼───┼───┼───┤\n';
       }
+      
+      text += '└───┴───┴───┴───┘';
+      return text;
+    }
+    
+    // Format results as ASCII art blocks
+    function getResultsAsTextArt(categories, isMatchSection = false) {
+      let text = '';
+      const maxWidth = isMatchSection ? 40 : 20;
+      
+      for (const [category, numbers] of Object.entries(categories)) {
+        if (numbers.length === 0) continue;
+        
+        const title = `${category} (${numbers.length})`;
+        text += `${title}\n`;
+        text += '┌' + '─'.repeat(maxWidth) + '┐\n';
+        
+        // Calculate how many numbers per line based on available width
+        const numbersPerLine = isMatchSection ? 6 : 4;
+        const lineCount = Math.ceil(numbers.length / numbersPerLine);
+        
+        for (let i = 0; i < lineCount; i++) {
+          const start = i * numbersPerLine;
+          const end = start + numbersPerLine;
+          const lineNumbers = numbers.slice(start, end);
+          
+          let line = '│';
+          lineNumbers.forEach(num => {
+            line += ` ${num} │`;
+          });
+          
+          // Pad the line if it's not full
+          if (lineNumbers.length < numbersPerLine) {
+            const missing = numbersPerLine - lineNumbers.length;
+            line += '   │'.repeat(missing);
+          }
+          
+          text += line + '\n';
+        }
+        
+        text += '└' + '─'.repeat(maxWidth) + '┘\n';
+      }
+      
+      return text.trim();
+    }
       
       return text;
     }
